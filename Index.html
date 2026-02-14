@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHOSST MODZ WEBSITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Orbitron:wght@400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon: #00f2ff;
+            --purple: #bc13fe;
+            --gold: #ffcc00;
+            --bg-deep: #010102;
+            --glass: rgba(0, 242, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --tiktok: #ff0050;
+        }
+
+        @keyframes pageReveal {
+            from { opacity: 0; transform: translateY(20px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        @keyframes namePulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(1.3); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes boxGlow { 0%, 100% { box-shadow: 0 0 5px var(--neon); border-color: var(--neon); } 50% { box-shadow: 0 0 15px var(--neon); border-color: #fff; } }
+        
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9); filter: blur(10px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+        @keyframes modalOut { from { opacity: 1; transform: scale(1); filter: blur(0); } to { opacity: 0; transform: scale(0.95); filter: blur(10px); } }
+
+        body {
+            margin: 0; padding: 0; background: var(--bg-deep); color: white;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow: hidden;
+        }
+
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
+
+        .hud-bracket {
+            position: fixed; width: 40px; height: 40px; border: 2px solid var(--neon);
+            z-index: 5; opacity: 0.3; animation: blink 2s infinite alternate;
+        }
+        .top-left { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
+        .top-right { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
+        .bottom-left { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
+        .bottom-right { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+
+        .container { 
+            width: 95%; max-width: 460px; z-index: 10; padding: 20px; 
+            animation: pageReveal 1s ease-out forwards;
+            max-height: 95vh; display: flex; flex-direction: column;
+        }
+
+        /* HEADER FIX */
+        .header { text-align: center; margin-bottom: 25px; flex-shrink: 0; z-index: 100; }
+        .logo { 
+            font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 900;
+            letter-spacing: 10px; margin: 0;
+            background: linear-gradient(to right, #fff, var(--neon));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--neon));
+        }
+        
+        .dev-tag { margin-top: 15px; }
+        .dev-box {
+            display: inline-block; border: 1px solid var(--neon);
+            padding: 6px 15px; background: rgba(0, 242, 255, 0.05);
+            animation: boxGlow 2s infinite alternate; border-radius: 2px;
+            font-size: 0.65rem; color: #888; letter-spacing: 2px;
+        }
+        .dev-name {
+            color: #fff; background: linear-gradient(90deg, var(--neon), var(--purple), var(--neon));
+            background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-weight: 900; animation: shine 3s linear infinite, namePulse 2s ease-in-out infinite;
+            display: inline-block; margin-left: 5px;
+        }
+
+        .main-card {
+            background: rgba(5, 5, 8, 0.95); border: 1px solid var(--border);
+            padding: 40px 25px; border-radius: 2px; position: relative;
+            backdrop-filter: blur(20px); box-shadow: 0 0 50px rgba(0,0,0,1);
+            overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .main-card::-webkit-scrollbar { display: none; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .s-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 4px; position: relative; }
+        .s-val { font-size: 1.2rem; color: #fff; font-weight: bold; display: block; }
+        .s-lbl { font-size: 0.5rem; color: #555; text-transform: uppercase; }
+        .indicator { position: absolute; right: 10px; top: 0; font-size: 0.8rem; font-weight: bold; color: #00ff88; animation: floatUp 0.8s ease-out forwards; }
+
+        .system-specs { display: flex; justify-content: space-between; font-size: 0.5rem; color: var(--neon); opacity: 0.6; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .ping-dot { display: inline-block; width: 6px; height: 6px; background: #00ff88; border-radius: 50%; margin-right: 4px; animation: blink 0.5s infinite; }
+
+        .status-header { font-size: 0.7rem; color: #00ff88; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Orbitron', sans-serif; }
+        .scanner { width: 10px; height: 10px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; animation: pulse 1.5s infinite; }
+
+        .file-display { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; margin-bottom: 25px; border-radius: 8px; }
+        .f-name { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 12px; }
+        .inject-btn { padding: 18px; background: transparent; color: var(--neon); border: 1px solid var(--neon); font-family: 'Syncopate'; font-weight: 900; font-size: 0.8rem; cursor: pointer; }
+        .tut-btn { padding: 14px; background: rgba(255, 204, 0, 0.05); color: var(--gold); border: 1px solid var(--gold); font-size: 0.7rem; cursor: pointer; }
+        .price-btn { padding: 14px; background: rgba(188, 19, 254, 0.05); color: var(--purple); border: 1px solid var(--purple); font-size: 0.7rem; cursor: pointer; }
+        .info-btn { padding: 14px; background: rgba(0, 242, 255, 0.05); color: #fff; border: 1px solid var(--neon); font-size: 0.7rem; font-family: 'Syncopate'; cursor: pointer; }
+
+        .tools-btn-container { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
+        .tools-btn { width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.02); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.7rem; font-family: 'Orbitron'; letter-spacing: 2px; cursor: pointer; }
+
+        .log-console { margin-top: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; height: 60px; overflow: hidden; font-size: 0.6rem; color: #333; text-align: left; }
+        .log-item { margin-bottom: 4px; border-left: 2px solid var(--purple); padding-left: 8px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-content { background: #050508; border: 1px solid var(--neon); padding: 25px; width: 85%; max-width: 400px; text-align: center; max-height: 85vh; overflow-y: auto; scrollbar-width: none; }
+        .modal-content::-webkit-scrollbar { display: none; }
+        .modal-opening { animation: modalIn 0.3s ease-out forwards; }
+        .modal-closing { animation: modalOut 0.3s ease-in forwards; }
+
+        /* 16:9 RATIO GALLERY */
+        .gallery-wrap { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+        .gallery-wrap img { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--neon); border-radius: 4px; object-fit: cover; background: #000; }
+
+        .dl-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 4px; margin: 12px 0; text-align: left; cursor: pointer; }
+        .price-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; }
+        .contact-header { margin: 20px 0 10px 0; padding: 8px; background: rgba(0, 242, 255, 0.15); color: var(--neon); font-size: 0.65rem; font-weight: bold; border-top: 1px solid var(--neon); border-bottom: 1px solid var(--neon); text-transform: uppercase; }
+        .contact-box { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .contact-btn { padding: 12px; text-decoration: none; font-size: 0.6rem; font-weight: bold; text-align: center; border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; }
+        .fb-color { background: #1877F2; } .tg-color { background: #0088cc; } .tk-color { background: var(--tiktok); grid-column: span 2; }
+        .chan-btn { background: rgba(0, 242, 255, 0.1); color: var(--neon); border: 1px solid var(--neon); grid-column: span 2; }
+        .feed-btn { background: rgba(255, 204, 0, 0.1); color: var(--gold); border: 1px solid var(--gold); grid-column: span 2; }
+        .close-txt { margin-top: 20px; color: #fff; font-size: 0.7rem; cursor: pointer; padding: 12px; border: 1px solid rgba(255,255,255,0.2); display: block; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="hud-bracket top-left"></div><div class="hud-bracket top-right"></div>
+    <div class="hud-bracket bottom-left"></div><div class="hud-bracket bottom-right"></div>
+    <canvas id="matrix"></canvas>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">GHOSST MODZ</h1>
+            <div class="dev-tag"><div class="dev-box">CREATED BY <span class="dev-name">SYLVIEOfficial</span></div></div>
+        </header>
+
+        <main class="main-card">
+            <div class="stats-grid">
+                <div class="s-card" id="vContainer"><span class="s-val" id="vCount">25,410</span><span class="s-lbl">Active user</span></div>
+                <div class="s-card" id="dContainer"><span class="s-val" id="dCount">11,204</span><span class="s-lbl">Global_Injections</span></div>
+            </div>
+            <div class="system-specs">
+                <span>CPU: ACTIVE</span><span>RAM: OPTIMIZED</span><span><span class="ping-dot"></span><span id="pingVal">14</span>MS</span>
+            </div>
+            <div class="status-header"><div class="scanner"></div> CALL  OF  DUTY  MOBILE  MODZ </div>
+            <div class="file-display">
+                <div class="f-name">GARENA_MOD_v1.6.54</div>
+                <div style="font-size: 0.55rem; color:#555; margin-top:5px;">STATUS: STABLE BYPASS ENCRYPTED</div>
+            </div>
+            <div class="btn-group">
+                <button class="inject-btn" onclick="openM('dlModal')">INITIALIZE_DOWNLOAD</button>
+                <button class="tut-btn" onclick="openM('tutModal')">HOW_TO_INSTALL</button>
+                <button class="price-btn" onclick="openM('priceModal')">GET KEY / PRICES</button>
+                <button class="info-btn" onclick="openM('infoModal')">GAME PICTURE</button>
+            </div>
+            <div class="log-console" id="logBox"></div>
+            <div class="tools-btn-container">
+                <button class="tools-btn" onclick="openM('toolsModal')">ACCESS_TOOLS_CORE</button>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="infoModal"><div class="modal-content">
+        <h2 style="font-family:'Syncopate'; font-size: 0.7rem; color:var(--neon);">GHOSST_GALLERY_PREVIEW</h2>
+        <div class="gallery-wrap">
+            <img src="img1.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+1'">
+            <img src="img2.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+2'">
+            <img src="img3.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+3'">
+            <img src="img4.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+4'">
+            <img src="img5.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+5'">
+            <img src="img6.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+6'">
+            <img src="img7.jpg" onerror="this.src='https://via.placeholder.com/1280x720?text=LANDSCAPE+16:9+7'">
+        </div>
+        <div class="close-txt" onclick="closeM('infoModal')">[ CLOSE_PREVIEW ]</div>
+    </div></div>
+
+    <div class="modal-overlay" id="dlModal"><div class="modal-content">
+        <h2 style="font-family:'Syncopate'; font-size: 0.7rem; color:var(--neon);">DOWNLOAD_CENTER</h2>
+        <div class="dl-card" onclick="window.open('https://pixeldrain.com/u/Uz5zawc7')">
+            <span style="color:var(--neon); font-size: 0.8rem; font-weight: bold;">INTERNAL MOD (APK ANDROID)</span><br>
+            <small style="color:#777; font-size: 0.55rem;">Direct injection. No virtual app needed.</small>
+        </div>
+        <div class="close-txt" onclick="closeM('dlModal')">[ BACK ]</div>
+    </div></div>
+
+    <div class="modal-overlay" id="priceModal"><div class="modal-content">
+        <h2 style="font-family:'Syncopate'; font-size: 0.7rem; color:var(--neon);">KEY_DATABASE</h2>
+        <div class="price-row"><span>1 DAY ACCESS</span><span>₱100</span></div>
+        <div class="price-row"><span>3 DAYS ACCESS</span><span>₱150</span></div>
+        <div class="price-row"><span>7 DAYS ACCESS</span><span>₱250</span></div>
+        <div class="price-row"><span>15 DAYS ACCESS</span><span>₱350</span></div>
+        <div class="price-row"><span>30 DAYS ACCESS</span><span>₱550</span></div>
+        <div class="price-row"><span>60 DAYS ACCESS</span><span>₱750</span></div>
+        <div class="price-row" style="color:var(--gold); border-bottom: none;"><span>LIFETIME ACCESS</span><span>₱2,000</span></div>
+        <div class="contact-header">CHOOSE CONTACT TO BUY</div>
+        <div class="contact-box">
+            <a href="https://www.facebook.com/share/16stLmnk4v/" target="_blank" class="contact-btn fb-color">FACEBOOK</a>
+            <a href="https://t.me/Sylvieofficeal" target="_blank" class="contact-btn tg-color">TELEGRAM</a>
+            <a href="https://www.tiktok.com/@sylvieofficial097" target="_blank" class="contact-btn tk-color">TIKTOK</a>
+            <a href="https://t.me/GHOSTSPREMIUM" target="_blank" class="contact-btn chan-btn">JOIN COMMUNITY</a>
+            <a href="https://t.me/ghostsfeedback" target="_blank" class="contact-btn feed-btn">FEEDBACKS</a>
+        </div>
+        <div class="close-txt" onclick="closeM('priceModal')">[ BACK ]</div>
+    </div></div>
+
+    <div class="modal-overlay" id="tutModal"><div class="modal-content" style="border-color:var(--gold)">
+        <h2 style="font-family:'Syncopate'; font-size: 0.7rem; color:var(--gold);">INSTALLATION_GUIDE</h2>
+        <div class="dl-card" onclick="window.open('T1', '_blank')">
+            <span style="color:var(--gold); font-size: 0.75rem; font-weight: bold;">HOW TO INSTALL INTERNAL MOD</span>
+        </div>
+        <div class="close-txt" onclick="closeM('tutModal')">[ BACK ]</div>
+    </div></div>
+
+    <div class="modal-overlay" id="toolsModal"><div class="modal-content">
+        <h2 style="font-family:'Syncopate'; font-size: 0.7rem; color:var(--neon);">TOOLS_CORE_ACCESS</h2>
+        <div class="dl-card" onclick="window.open('https://pixeldrain.com/u/zSEHWDSq', '_blank')">MT MANAGER</div>
+        <div class="dl-card" onclick="window.open('https://play.google.com/store/apps/details?id=ru.zdevs.zarchiver', '_blank')">ZARCHIVER</div>
+        <div class="dl-card" onclick="window.open('https://t.me/vertualapk/26', '_blank')">VIRTUAL APK (64-BIT)</div>
+        <div class="close-txt" onclick="closeM('toolsModal')">[ BACK ]</div>
+    </div></div>
+
+    <script>
+        function openM(id) { 
+            const m = document.getElementById(id); const c = m.querySelector('.modal-content');
+            m.style.display = 'flex'; c.classList.remove('modal-closing'); c.classList.add('modal-opening');
+        }
+        function closeM(id) { 
+            const m = document.getElementById(id); const c = m.querySelector('.modal-content');
+            c.classList.add('modal-closing');
+            setTimeout(() => { m.style.display = 'none'; }, 300);
+        }
+
+        const canvas = document.getElementById("matrix"); const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const drops = Array(Math.floor(canvas.width / 16)).fill(1);
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(1, 1, 2, 0.1)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00f2ff"; ctx.font = "16px monospace";
+            drops.forEach((y, i) => {
+                ctx.fillText(Math.floor(Math.random()*10), i * 16, y * 16);
+                if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++;
+            });
+        }
+        setInterval(drawMatrix, 40);
+
+        let v = 25410; let d = 11204;
+        function addFloat(id) {
+            const container = document.getElementById(id); const el = document.createElement("div");
+            el.className = "indicator"; el.innerText = "+1"; container.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+        setInterval(() => { v++; document.getElementById("vCount").innerText = v.toLocaleString(); addFloat("vContainer"); }, 3500);
+        setInterval(() => { if(Math.random() > 0.5) { d++; document.getElementById("dCount").innerText = d.toLocaleString(); addFloat("dContainer"); } }, 6000);
+        setInterval(() => { document.getElementById("pingVal").innerText = Math.floor(Math.random() * 10) + 12; }, 2000);
+
+        const logBox = document.getElementById("logBox");
+        setInterval(() => {
+            const p = ["> Bypass active.", "> Link stable.", "> Encrypted.", "> Module loaded."];
+            const div = document.createElement("div"); div.className = "log-item";
+            div.innerText = p[Math.floor(Math.random()*p.length)];
+            logBox.appendChild(div); if(logBox.childNodes.length > 3) logBox.removeChild(logBox.firstChild);
+        }, 3000);
+    </script>
+</body>
+  </html>
